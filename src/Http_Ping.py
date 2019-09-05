@@ -1,8 +1,6 @@
 import requests
 import time
 from datetime import datetime
-import pytz
-import email.utils as eut
 #dev:
 from urllib3.exceptions import InsecureRequestWarning
 
