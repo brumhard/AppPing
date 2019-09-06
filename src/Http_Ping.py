@@ -1,35 +1,41 @@
 import requests
 import time
 from datetime import datetime
-#dev:
+import threading
+import json
+# dev:
 from urllib3.exceptions import InsecureRequestWarning
-
-# Suppress only the single warning from urllib3 needed.
 
 
 class Http_Ping:
     def __init__(self, connection_string):
         self.connection_string = connection_string
-
-    def start(self):
-        session = requests.session()
+        self.session = requests.session()
 
         # verify false should not be used in prod
         # instead use path to cert file (https://2.python-requests.org/en/master/user/advanced/#ssl-cert-verification)
-        session.verify = False
-        requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+        self.session.verify = False
+        requests.packages.urllib3.disable_warnings(
+            category=InsecureRequestWarning)
 
+    def _send_request(self):
+        begin = datetime.utcnow()
+        response = self.session.get(self.connection_string)
+        now = datetime.utcnow()
+
+        time_delta = (now - begin).total_seconds()
+
+        info_obj = {"TimeStamp": begin.isoformat(), "TimeTaken": time_delta,
+                    "Status": response.status_code, "Target": self.connection_string}
+        info_json = json.dumps(info_obj)
+        print(info_json)
+
+    def _start(self):
         while True:
-            begin = datetime.utcnow()
-            
-            response = session.get(self.connection_string)
-
-            now = datetime.utcnow()
-            # date header should not be used as is doesn't include milliseconds und GMT instead of UTC
-            # send_time = datetime.strptime(response.headers['date'], '%a, %d %b %Y %X %Z')
-            # send_time = send_time.astimezone(pytz.utc)
-            
-            time_delta = (now - begin).total_seconds()
-            # print("\nbegin:{0}, end: {1}".format(begin, now))
-            print("time consumed: {}\tStatus: {}".format(time_delta, response.status_code))
+            self._send_request()
             time.sleep(0.5)
+
+    def start_in_thread(self):
+        client_thread = threading.Thread(target=self._start)
+        client_thread.daemon = True
+        client_thread.start()
