@@ -1,5 +1,5 @@
 import requests
-from Http_Ping import Http_Ping
+from http_ping import Http_Ping
 import json
 import argparse
 import queue
