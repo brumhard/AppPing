@@ -10,14 +10,14 @@ from urllib3.exceptions import InsecureRequestWarning
 class Http_Ping:
     def __init__(self, connection_string, output_queue):
         self.connection_string = connection_string
-        self._session = requests.session()
+
         self._output_queue = output_queue
 
-        # verify false should not be used in prod
-        # instead use path to cert file (https://2.python-requests.org/en/master/user/advanced/#ssl-cert-verification)
-        self._session.verify = False
-        requests.packages.urllib3.disable_warnings(
-            category=InsecureRequestWarning)
+    def __enter__(self):
+        self._session = requests.session()
+
+    def __exit__(self, type, value, traceback):
+        self._session.close()
 
     def _send_request(self):
         begin = datetime.utcnow()
@@ -31,7 +31,7 @@ class Http_Ping:
         #info_json = json.dumps(info_obj)
 
         self._output_queue.put(info_obj)
-        #print(info_json)
+        # print(info_json)
 
     def _start(self):
         while True:

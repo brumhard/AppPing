@@ -13,7 +13,7 @@ logger.setLevel(logging.INFO)
 parser = argparse.ArgumentParser(
     description="Start querying the defined endpoints")
 parser.add_argument("-t", "--targetfile", help="The file containing the targets to be pinged",
-                    default='C:\\Users\\brumhardadm\\Desktop\\tmp\\worker_targets.json'#, required=True
+                    default='C:\\Users\\brumhardadm\\Desktop\\tmp\\worker_targets.json'  # , required=True
                     )
 args = parser.parse_args()
 
@@ -26,12 +26,9 @@ with open(args.targetfile, 'r') as config_file:
 message_queue = queue.Queue()
 for target in config_data['targets']:
     test = Http_Ping(target, message_queue)
-    test.start_in_thread()
+    with test:
+        test.start_in_thread()
 
 handler = Async_EventHub_Connector(config_data['EHConnectionString'])
 with handler:
     handler.process_messages(message_queue)
-
-
-
-        
