@@ -3,7 +3,11 @@ from http_ping import Http_Ping
 import json
 import argparse
 import queue
-from messaging import EventHub_Connector
+import logging
+from messaging import Async_EventHub_Connector
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # arguments for script
 parser = argparse.ArgumentParser(
@@ -24,11 +28,10 @@ for target in config_data['targets']:
     test = Http_Ping(target, message_queue)
     test.start_in_thread()
 
-# write messages to event hub
-handler = EventHub_Connector(config_data['EHConnectionString'])
-while True:
-    if not message_queue.empty():
-        message = message_queue.get()
-        with handler:
-            handler.process(json.dumps(message))
+handler = Async_EventHub_Connector(config_data['EHConnectionString'])
+with handler:
+    handler.process_messages(message_queue)
+
+
+
         
